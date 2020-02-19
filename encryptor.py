@@ -13,31 +13,19 @@ class Encryptor:
     """ Provides simple tools for encrypt / decrypt file and folders
     """
 
-    def __init__(self, key = None):
+    def __init__(self):
         # basic config
         self.ext_file = ".lock"
         self.ext_dir = ".dlock"
 
-        # if no key is provided, generate one
-        if key is None:
-            self.key = Fernet.generate_key()
-            with open("secret.key", "wb") as file:
-                file.write(self.key)
-        elif isinstance(key, str):
-            self.password_to_key(key)
-            print(self.key)
-        else:
-            self.key = key
+        # init the Fernet
+        self.f = None
 
-        self.f = Fernet(self.key)
-
-
-    def password_to_key(self, password):
+    @staticmethod
+    def password_to_key(password, salt):
         """
         """
         password = password.encode()
-        salt = os.urandom(16)
-        salt = "AsoeIR350C71629c".encode()
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
@@ -45,13 +33,36 @@ class Encryptor:
             iterations=1000000,
             backend=default_backend()
         )
-        self.key = base64.urlsafe_b64encode(kdf.derive(password))
+        return base64.urlsafe_b64encode(kdf.derive(password))
+
+
+    def set_key_from_keyfile(self, key_file):
+        """
+        """
+        self.key = open(key_file, "rb").read()
+        self.f = Fernet(self.key)
+
+    def set_key_from_password(self, password):
+        """
+        """
+        salt = "DefaulSalt123456".encode()
+        self.key = Encryptor.password_to_key(password, salt)
+        self.f = Fernet(self.key)
+
+    def generate_key_file(self, file_path):
+        """
+        """
+        with open(file_path, "wb") as file:
+            file.write(Fernet.generate_key())
 
 
     def encrypt_file(self, file_name):
         """ Given a filename (str) and key (bytes), it encrypts the file and write it
         """
-        
+        if self.f is None:
+            raise ValueError(
+                "A key must be created before encryption / decryption operations")
+
         with open(file_name, "rb") as file:
             # read all file data
             file_data = file.read()
@@ -72,6 +83,10 @@ class Encryptor:
     def decrypt_file(self, file_name):
         """ Given a filename (str) and key (bytes), it decrypts the file and write it
         """
+        if self.f is None:
+            raise ValueError(
+                "A key must be created before encryption / decryption operations")
+
         with open(file_name, "rb") as file:
             # read the file data
             encrypted_data = file.read()
@@ -93,6 +108,10 @@ class Encryptor:
     def encrypt_directory(self, dir_name):
         """
         """
+        if self.f is None:
+            raise ValueError(
+                "A key must be created before encryption / decryption operations")
+
         # Create an archive of the directory
         shutil.make_archive(dir_name, 'tar', dir_name)
 
@@ -111,6 +130,9 @@ class Encryptor:
     def decrypt_directory(self, file_name):
         """
         """
+        if self.f is None:
+            raise ValueError(
+                "A key must be created before encryption / decryption operations")
         # decrypt tar archive
         self.decrypt_file(file_name)
 

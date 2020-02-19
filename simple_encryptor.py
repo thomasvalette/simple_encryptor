@@ -20,7 +20,7 @@ class Encryptor_GUI(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.init_UI()
-        self.encryptor = Encryptor("toto")
+        self.encryptor = Encryptor()
         
         
     def init_UI(self):               
@@ -36,8 +36,7 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.init_key_section()
         self.init_file_explorer()
         self.init_buttons()
-
-        
+    
         self.layout_global.addLayout(self.layout_key)
         self.layout_global.addLayout(self.layout_file_explorer)
         self.layout_global.addLayout(self.layout_buttons)
@@ -57,26 +56,104 @@ class Encryptor_GUI(QtWidgets.QWidget):
 
 
     def init_key_section(self):
+        # password section
         self.label_pwd = QtWidgets.QLabel("Password")
 
         self.field_pwd = QtWidgets.QLineEdit()
         self.field_pwd.setEchoMode(QtWidgets.QLineEdit.Password)
         self.field_pwd.returnPressed.connect(self.change_pwd)
 
-        self.btn_pwd = QtWidgets.QPushButton("Validate")
+        self.btn_pwd = QtWidgets.QPushButton("Change password")
         self.btn_pwd.clicked.connect(self.change_pwd)
 
+        self.label_chg_pwd = QtWidgets.QLabel("No password typed")
+        self.label_chg_pwd.setStyleSheet("color:#FA5858")
+
+        # key file section
+        self.label_key = QtWidgets.QLabel("Key file")
+
+        self.field_key = QtWidgets.QLineEdit()
+        self.field_key.setReadOnly(True)
+
+        self.btn_gen = QtWidgets.QPushButton("Create key file")
+        self.btn_gen.clicked.connect(self.create_key)
+
+        self.btn_key = QtWidgets.QPushButton("Load key")
+        self.btn_key.clicked.connect(self.change_key)
+
+        self.label_chg_key = QtWidgets.QLabel("No key loaded")
+        self.label_chg_key.setStyleSheet("color:#FA5858")
+
+        # creating layout
         self.layout_key = QtWidgets.QGridLayout()
         self.layout_key.addWidget(self.label_pwd,0,0)
-        self.layout_key.addWidget(self.field_pwd,0,1)
-        self.layout_key.addWidget(self.btn_pwd,0,2)
+        self.layout_key.addWidget(self.field_pwd,1,0)
+        self.layout_key.addWidget(self.btn_pwd,1,1)
+        self.layout_key.addWidget(self.label_chg_pwd,2,0)
+        self.layout_key.addWidget(self.label_key,0,3)
+        self.layout_key.addWidget(self.field_key,1,3)
+        self.layout_key.addWidget(self.btn_gen,0,4)
+        self.layout_key.addWidget(self.btn_key,1,4)
+        self.layout_key.addWidget(self.label_chg_key,2,3)
 
+
+        self.layout_key.setColumnMinimumWidth(1,110)
+        self.layout_key.setColumnMinimumWidth(2,50)
+        self.layout_key.setColumnMinimumWidth(4,110)
+        self.layout_key.setRowMinimumHeight(3,20)
     
+
+    def create_key(self):
+        """
+        """
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        dialog.setNameFilter("Any files (*.key)")
+        if dialog.exec_():
+            key_file = dialog.selectedFiles()[0]
+            self.encryptor.generate_key_file("{}.key".format(key_file))
+            QtWidgets.QMessageBox.information(self, "Key File Generation", 
+                    ("Your key file has been successfully generated.\n\n"
+                     "You can load it to encrypt / decrypt."))
+
+
+
     def change_pwd(self):
         """ Create a new Encryptor object, with a new Fernet key based on password
         """
-        self.encryptor = Encryptor(self.field_pwd.text())
-        self.field_pwd.clear()
+        self.encryptor.set_key_from_password(self.field_pwd.text())
+        self.label_chg_pwd.setText("Password typed")
+        self.label_chg_pwd.setStyleSheet("color:#01DF3A")
+        self.label_chg_key.clear()
+        self.field_key.clear()
+        QtWidgets.QMessageBox.information(self, "Password Change", 
+            ("Your password has been successfully changed.\n\n"
+             "You can now encrypt / decrypt files."))
+
+
+    def change_key(self):
+        """ Create a new Encryptor object, with a new Fernet key from the file 
+        """    
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        if dialog.exec_():
+            key_file = dialog.selectedFiles()[0]
+            
+            # load key file and create new Encryptor object
+            try:
+                self.encryptor.set_key_from_keyfile(key_file)
+                # set field content
+                self.field_key.setText(Path(key_file).name)
+                self.label_chg_key.setText("Key loaded")
+                self.label_chg_key.setStyleSheet("color:#01DF3A")
+                self.field_pwd.clear()
+                self.label_chg_pwd.clear()
+                QtWidgets.QMessageBox.information(self, "Key File Change", 
+                    ("Your key file has been successfully loaded.\n\n"
+                     "You can now encrypt / decrypt files."))
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(self, "File Loading Error", 
+                "An error has occured during file loading:\n\n{}".format(repr(e)))  
 
 
     def init_file_explorer(self):
@@ -87,15 +164,16 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_file_explorer.addLayout(self.layout_explorer_btn,0,0)
         self.layout_file_explorer.addLayout(self.layout_explorer_tree,1,0)
 
-    def init_explorer_buttons(self):
 
+    def init_explorer_buttons(self):
         self.btn_prev_dir = QtWidgets.QPushButton()
         self.btn_prev_dir.setIcon(QtGui.QIcon("./previous.png"))
         self.btn_prev_dir.clicked.connect(self.previous_directory)
 
         self.path_viewer = QtWidgets.QLineEdit()
+        self.path_viewer.setReadOnly(True)
 
-        self.btn_change_dir = QtWidgets.QPushButton(" Change Directory ")
+        self.btn_change_dir = QtWidgets.QPushButton("Change Directory")
         self.btn_change_dir.clicked.connect(self.change_directory)
 
         self.layout_explorer_btn = QtWidgets.QGridLayout()
@@ -104,16 +182,13 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_explorer_btn.addWidget(self.path_viewer,0,1)
         self.layout_explorer_btn.addWidget(self.btn_change_dir,0,2)
 
+        self.layout_explorer_btn.setColumnMinimumWidth(2,110)
+
     
     def previous_directory(self):
         prev_dir = Path(self.path_viewer.text()).parent
-        self.tree.setRootIndex(self.model.index(str(prev_dir)))
-        if platform.system() == "windows":
-            self.path_viewer.setText(prev_dir.as_posix())
-        else:
-            self.path_viewer.setText(str(prev_dir))
+        self.set_new_path(str(prev_dir))
         
-
 
     def change_directory(self):
         dialog = QtWidgets.QFileDialog(self)
@@ -125,13 +200,14 @@ class Encryptor_GUI(QtWidgets.QWidget):
 
 
     def init_file_tree(self):
+        """
+        """
         # layout for the file explorer
         path=QtCore.QDir.currentPath()
+        path="C:/valette/files/dev/cypherTests"
         # file system model init
         self.model = QtWidgets.QFileSystemModel()
         self.model.setRootPath(path)
-        self.path_viewer.setText(path)
-
         self.model.setNameFilterDisables(False)
         
         # tree view init and settings
@@ -146,35 +222,44 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.tree.setColumnWidth(1,100)
         self.tree.setColumnWidth(2,100)
         self.tree.setItemsExpandable(False)
-        # self.tree.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+
+        # set path
+        self.set_new_path(path)
 
         # event mappers
         self.tree.selectionModel().selectionChanged.connect(self.select_change)
         self.tree.doubleClicked.connect(self.open_file_directory)     
         self.tree.activated.connect(self.open_file_directory)
 
-        self.layout_explorer_tree = QtWidgets.QGridLayout()
         # adding the tree to the layout
+        self.layout_explorer_tree = QtWidgets.QGridLayout()
         self.layout_explorer_tree.addWidget(self.tree)
 
 
     def open_file_directory(self):
+        """
+        """
         index = self.tree.currentIndex()
         file_path = self.model.filePath(index)
         if Path(file_path).is_dir():
-            self.tree.setRootIndex(self.model.index(file_path))
-            self.path_viewer.setText(file_path)
+            self.set_new_path(file_path)
         else:
-            os.startfile(file_path)
+            try:
+                os.startfile(file_path)
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(self, "File Error", 
+                "The system cannot open this file:\n\n{}".format(repr(e)))
 
 
     def init_buttons(self):
         self.btn_encrypt = QtWidgets.QPushButton('Encrypt')
         self.btn_encrypt.clicked.connect(self.encrypt)
+        self.btn_encrypt.setEnabled(False)
 
         self.btn_decrypt = QtWidgets.QPushButton('Decrypt')
         self.btn_decrypt.clicked.connect(self.decrypt)
-        
+        self.btn_decrypt.setEnabled(False)            
+
         self.layout_buttons = QtWidgets.QGridLayout()
 
         self.layout_buttons.addWidget(self.btn_encrypt,0,0)
@@ -190,15 +275,24 @@ class Encryptor_GUI(QtWidgets.QWidget):
         if file_ext in [self.encryptor.ext_dir, self.encryptor.ext_file]:
             # activate encrypt button and disable decrypt + style change
             self.btn_encrypt.setEnabled(False)
-            self.btn_encrypt.setStyleSheet("background-color:#6e6e6e;")
+            self.btn_encrypt.setStyleSheet("background-color:#353535;")
             self.btn_decrypt.setEnabled(True)
-            self.btn_decrypt.setStyleSheet("background-color:#2a82da;")
+            self.btn_decrypt.setStyleSheet("background-color:#339900;")
         else:
             # activate decrypt button and disable encrypt + style change
             self.btn_encrypt.setEnabled(True)
-            self.btn_encrypt.setStyleSheet("background-color:#339900;")
+            self.btn_encrypt.setStyleSheet("background-color:#2a82da;")
             self.btn_decrypt.setEnabled(False)
-            self.btn_decrypt.setStyleSheet("background-color:#6e6e6e;")
+            self.btn_decrypt.setStyleSheet("background-color:#353535;")
+
+    
+    def set_new_path(self, path):
+        path = Path(path)
+        self.tree.setRootIndex(self.model.index(str(path)))
+        if platform.system() == "windows":
+            self.path_viewer.setText(path.as_posix())
+        else:
+            self.path_viewer.setText(str(path))
 
 
     def encrypt(self):
@@ -210,9 +304,9 @@ class Encryptor_GUI(QtWidgets.QWidget):
                 self.encryptor.encrypt_directory(file_path)
             elif Path(file_path).is_file():
                 self.encryptor.encrypt_file(file_path)
-        except:
-            QtWidgets.QMessageBox.critical(self, 'Encryption Error', 
-            "An error has occured during the encryption.")
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Encryption Error", 
+            "An error has occured during the encryption:\n\n{}".format(repr(e)))
 
 
     def decrypt(self):
@@ -224,12 +318,10 @@ class Encryptor_GUI(QtWidgets.QWidget):
                 self.encryptor.decrypt_file(file_path)
             elif Path(file_path).suffix == self.encryptor.ext_dir:
                 self.encryptor.decrypt_directory(file_path)
-        except:
-            QtWidgets.QMessageBox.critical(self, 'Decryption Error', 
-            "An error has occured during the decryption.")
-        
-
-
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Decryption Error", 
+            "An error has occured during the decryption:\n\n{}".format(repr(e)))
+    
         
 if __name__ == '__main__':
     
@@ -250,8 +342,7 @@ if __name__ == '__main__':
     dark_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(150, 150, 150))
     dark_palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
     app.setPalette(dark_palette)
-    app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
-    
+    app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; } QPushButton { padding: 5px; }")
     
     enc = Encryptor_GUI()
     sys.exit(app.exec_())
