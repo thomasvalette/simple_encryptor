@@ -6,6 +6,7 @@ import platform
 from pathlib import Path, PurePath
 from PyQt5 import QtWidgets, QtGui, QtCore
 from encryptor import Encryptor
+from themes import *
 
 
 class Encryptor_GUI(QtWidgets.QWidget):
@@ -27,7 +28,7 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.center()
         
         self.setWindowTitle('Simple Encryptor')  
-        self.setWindowIcon(QtGui.QIcon('icon.png')) 
+        self.setWindowIcon(QtGui.QIcon(resource_path('resource/icon.png')))
 
         # global layout for the whole window
         self.layout_global = QtWidgets.QVBoxLayout()
@@ -115,7 +116,7 @@ class Encryptor_GUI(QtWidgets.QWidget):
         """Initiate the file explorer buttons
         """
         self.btn_prev_dir = QtWidgets.QPushButton()
-        self.btn_prev_dir.setIcon(QtGui.QIcon("./previous.png"))
+        self.btn_prev_dir.setIcon(QtGui.QIcon(resource_path("resource/previous.png")))
         self.btn_prev_dir.clicked.connect(self.previous_directory)
 
         self.path_viewer = QtWidgets.QLineEdit()
@@ -138,7 +139,7 @@ class Encryptor_GUI(QtWidgets.QWidget):
         """
         # layout for the file explorer
         path=QtCore.QDir.currentPath()
-        path="C:/valette/files/dev/cypherTests"
+
         # file system model init
         self.model = QtWidgets.QFileSystemModel()
         self.model.setRootPath(path)
@@ -201,7 +202,7 @@ class Encryptor_GUI(QtWidgets.QWidget):
         """
         self.encryptor.set_key_from_password(self.field_pwd.text())
         self.label_chg_pwd.setText("Password typed")
-        self.label_chg_pwd.setStyleSheet("color:#01DF3A")
+        self.label_chg_pwd.setStyleSheet("color:#01ac2d")
         self.label_chg_key.clear()
         self.field_key.clear()
         QtWidgets.QMessageBox.information(self, "Password Change", 
@@ -238,7 +239,7 @@ class Encryptor_GUI(QtWidgets.QWidget):
                 # set field content
                 self.field_key.setText(Path(key_file).name)
                 self.label_chg_key.setText("Key loaded")
-                self.label_chg_key.setStyleSheet("color:#01DF3A")
+                self.label_chg_key.setStyleSheet("color:#01ac2d")
                 self.field_pwd.clear()
                 self.label_chg_pwd.clear()
                 QtWidgets.QMessageBox.information(self, "Key File Change", 
@@ -279,17 +280,13 @@ class Encryptor_GUI(QtWidgets.QWidget):
         # check file extension
         file_ext = os.path.splitext(file_path)[1]
         if file_ext in [self.encryptor.ext_dir, self.encryptor.ext_file]:
-            # activate encrypt button and disable decrypt + style change
+            # activate encrypt button and disable decrypt
             self.btn_encrypt.setEnabled(False)
-            self.btn_encrypt.setStyleSheet("background-color:#353535;")
             self.btn_decrypt.setEnabled(True)
-            self.btn_decrypt.setStyleSheet("background-color:#339900;")
         else:
-            # activate decrypt button and disable encrypt + style change
+            # activate decrypt button and disable encrypt
             self.btn_encrypt.setEnabled(True)
-            self.btn_encrypt.setStyleSheet("background-color:#2a82da;")
             self.btn_decrypt.setEnabled(False)
-            self.btn_decrypt.setStyleSheet("background-color:#353535;")
 
 
     def open_file_directory(self):
@@ -356,29 +353,28 @@ class Encryptor_GUI(QtWidgets.QWidget):
             "An error has occured during the decryption:\n\n{}".format(repr(e)))
     
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller 
+    """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 # MAIN  
 if __name__ == '__main__':
     
     app = QtWidgets.QApplication(sys.argv)
-    # DARK THEME
-    app.setStyle("Fusion")
-    dark_palette = QtGui.QPalette()
-    dark_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(53, 53, 53))
-    dark_palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
-    dark_palette.setColor(QtGui.QPalette.Base, QtGui.QColor(25, 25, 25))
-    dark_palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(53, 53, 53))
-    dark_palette.setColor(QtGui.QPalette.ToolTipBase, QtCore.Qt.white)
-    dark_palette.setColor(QtGui.QPalette.ToolTipText, QtCore.Qt.white)
-    dark_palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
-    dark_palette.setColor(QtGui.QPalette.Button, QtGui.QColor(53, 53, 53))
-    dark_palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.white)
-    dark_palette.setColor(QtGui.QPalette.BrightText, QtCore.Qt.red)
-    dark_palette.setColor(QtGui.QPalette.Link, QtGui.QColor(230, 230, 230))
-    dark_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(150, 150, 150))
-    dark_palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
-    app.setPalette(dark_palette)
-    app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; } QPushButton { padding: 5px; }")
     
-    # 
+    # theme
+    # set_ubuntu_theme(app)
+    set_dark_theme(app)
+    # set_light_theme(app)
+
+    # launch GUI
     enc = Encryptor_GUI()
     sys.exit(app.exec_())
