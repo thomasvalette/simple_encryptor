@@ -3,6 +3,7 @@
 import os
 import base64
 import shutil
+import yaml
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -14,9 +15,12 @@ class Encryptor:
     """
 
     def __init__(self):
+        
+        self.config = yaml.safe_load(open("config.yml"))
+
         # basic config
-        self.ext_file = ".lock"
-        self.ext_dir = ".dlock"
+        self.ext_file = self.config["extensions"]["file"]
+        self.ext_dir  = self.config["extensions"]["dir"]
 
         # init the Fernet
         self.f = None
@@ -45,7 +49,7 @@ class Encryptor:
     def set_key_from_password(self, password):
         """
         """
-        salt = "DefaulSalt123456".encode()
+        salt = self.config["password_salt"].encode()
         self.key = Encryptor.password_to_key(password, salt)
         self.f = Fernet(self.key)
 

@@ -1,0 +1,11 @@
+# the extensions of cyphered files and folders
+extensions:
+    file: ".lock"
+    dir: ".dlock"
+
+# The starting theme for the application
+# can be "light", "dark", "ubuntu", "solaris"
+default_theme: "dark"
+
+# the salt used with the password to generate a valid 128 bit key
+password_salt: "DefaulSalt123456"

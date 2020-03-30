@@ -5,6 +5,7 @@ import os
 import platform
 import secrets
 import string
+import yaml
 from pathlib import Path, PurePath
 from PyQt5 import QtWidgets, QtGui, QtCore
 from encryptor import Encryptor
@@ -436,7 +437,19 @@ if __name__ == '__main__':
     
     # theme
     app.setStyle("Fusion")
-    set_dark_theme(app)
+    config = yaml.safe_load(open("config.yml"))
+    theme = config["default_theme"]
+
+    if theme == "light":
+        set_light_theme(app)
+    elif theme == "dark":
+        set_dark_theme(app)
+    elif theme == "ubuntu":
+        set_ubuntu_theme(app)
+    elif theme == "solaris":
+        set_solaris_theme(app)
+    else:
+        set_light_theme(app)
    
     # launch GUI
     enc = EncryptorGUI()
