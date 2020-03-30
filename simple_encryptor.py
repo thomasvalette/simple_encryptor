@@ -3,34 +3,124 @@
 import sys
 import os
 import platform
+import secrets
+import string
 from pathlib import Path, PurePath
 from PyQt5 import QtWidgets, QtGui, QtCore
 from encryptor import Encryptor
 from themes import *
 
 
-class Encryptor_GUI(QtWidgets.QWidget):
+class EncryptorGUI(QtWidgets.QMainWindow):
     """Simple encryption / decryption program
     Made with QT GUI and cryptography Fernet lib
     """ 
 
     def __init__(self):
-        super().__init__()
-        self.init_UI()
-        # create encryptor object for crypt/decrypt operations
-        self.encryptor = Encryptor()
+        QtWidgets.QMainWindow.__init__(self)
         
-        
-    def init_UI(self):
-        """Initialize GUI
-        """               
+        # window properties
         self.resize(600, 400)
         self.center()
-        
         self.setWindowTitle('Simple Encryptor')  
         self.setWindowIcon(QtGui.QIcon(resource_path('resource/icon.png')))
 
-        # global layout for the whole window
+        # creating menu
+        self.init_menu()
+
+        # create the encryptor widget
+        self.encryptor_widget = EncryptorWidget()    
+        # set the main widget for the window    
+        self.setCentralWidget(self.encryptor_widget)
+
+        # displays the window
+        self.show()
+
+
+    def center(self):
+        """Center the main window in the screen based off the window size
+        """
+        qr = self.frameGeometry()
+        cp = QtWidgets.QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+
+    def init_menu(self):
+        """Builds the application menu
+        """
+        # generate password
+        gen_pwd_action = QtWidgets.QAction('Generate Password', self)        
+        gen_pwd_action.triggered.connect(self.create_password)
+
+        # generate key file
+        gen_key_action = QtWidgets.QAction('Generate Key File', self)        
+        gen_key_action.triggered.connect(self.create_key)
+
+        # exit action, closes the program
+        exit_action = QtWidgets.QAction('Exit', self)        
+        exit_action.setShortcut('Ctrl+Q')
+        exit_action.setStatusTip('Exit application')
+        exit_action.triggered.connect(app.quit)
+
+        # Theme menus
+        light_theme_action = QtWidgets.QAction('Light theme', self)        
+        light_theme_action.triggered.connect(self.light_theme)
+        dark_theme_action = QtWidgets.QAction('Dark theme', self)        
+        dark_theme_action.triggered.connect(self.dark_theme)
+        ubuntu_theme_action = QtWidgets.QAction('Ubuntu theme', self)        
+        ubuntu_theme_action.triggered.connect(self.ubuntu_theme)
+        solaris_theme_action = QtWidgets.QAction('Solaris theme', self)        
+        solaris_theme_action.triggered.connect(self.solaris_theme)
+
+        # Create menu bar and add action
+        menuBar = self.menuBar()
+        fileMenu = menuBar.addMenu('File')
+        fileMenu.addAction(gen_pwd_action)
+        fileMenu.addAction(gen_key_action)
+        fileMenu.addSeparator()
+        fileMenu.addAction(exit_action)
+        themeMenu = menuBar.addMenu('Theme')
+        themeMenu.addAction(light_theme_action)
+        themeMenu.addAction(dark_theme_action)
+        themeMenu.addAction(ubuntu_theme_action)
+        themeMenu.addAction(solaris_theme_action)
+
+    def light_theme(self):
+        set_light_theme(app)
+
+    def dark_theme(self):
+        set_dark_theme(app)
+
+    def ubuntu_theme(self):
+        set_ubuntu_theme(app)
+
+    def solaris_theme(self):
+        set_solaris_theme(app)
+
+    def create_password(self):
+        """Generates a 30 char long password
+        """
+        alphabet = string.ascii_letters + string.digits
+        password = ''.join(secrets.choice(alphabet) for i in range(30))
+
+        QtWidgets.QMessageBox.information(self, "Password generated", 
+                "{}".format(password)) 
+
+    def create_key(self):
+        self.encryptor_widget.create_key()
+
+
+class EncryptorWidget(QtWidgets.QWidget):
+    """Encryptor widget, contains all the needed widgets to encrypt/decrypt
+    """ 
+
+    def __init__(self):
+        """Initializes widget
+        """  
+        super().__init__()
+           
+        # global layout for the whole widget 
         self.layout_global = QtWidgets.QVBoxLayout()
 
         # generate sub layouts
@@ -44,13 +134,12 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_global.addLayout(self.layout_buttons)
         self.setLayout(self.layout_global)
 
-        # show window
-        self.show()
-        
+        # create encryptor object for crypt/decrypt operations
+        self.encryptor = Encryptor()
 
     def init_key_section(self):
         """Initiates the key section
-        This contains the password typing field, key file load and generation
+        This contains the password typing field, key file load
         """
         # password section
         self.label_pwd = QtWidgets.QLabel("Password")
@@ -71,9 +160,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.field_key = QtWidgets.QLineEdit()
         self.field_key.setReadOnly(True)
 
-        self.btn_gen = QtWidgets.QPushButton("Create key file")
-        self.btn_gen.clicked.connect(self.create_key)
-
         self.btn_key = QtWidgets.QPushButton("Load key")
         self.btn_key.clicked.connect(self.change_key)
 
@@ -88,7 +174,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_key.addWidget(self.label_chg_pwd,2,0)
         self.layout_key.addWidget(self.label_key,0,3)
         self.layout_key.addWidget(self.field_key,1,3)
-        self.layout_key.addWidget(self.btn_gen,0,4)
         self.layout_key.addWidget(self.btn_key,1,4)
         self.layout_key.addWidget(self.label_chg_key,2,3)
         self.layout_key.setColumnMinimumWidth(1,110)
@@ -96,7 +181,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_key.setColumnMinimumWidth(4,110)
         self.layout_key.setRowMinimumHeight(3,20)
     
-
     def init_file_explorer(self):
         """Initiate the file explorer, which contains
         - an explorer button and current path field
@@ -110,7 +194,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_file_explorer = QtWidgets.QGridLayout()
         self.layout_file_explorer.addLayout(self.layout_explorer_btn,0,0)
         self.layout_file_explorer.addLayout(self.layout_explorer_tree,1,0)
-
 
     def init_explorer_buttons(self):
         """Initiate the file explorer buttons
@@ -132,7 +215,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_explorer_btn.addWidget(self.btn_change_dir,0,2)
 
         self.layout_explorer_btn.setColumnMinimumWidth(2,110)
-
 
     def init_file_tree(self):
         """Initiate the file tree itself
@@ -170,7 +252,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_explorer_tree = QtWidgets.QGridLayout()
         self.layout_explorer_tree.addWidget(self.tree)
 
-
     def init_buttons(self):
         """Initiate the encrypt/decrypt buttons layout
         """
@@ -187,19 +268,12 @@ class Encryptor_GUI(QtWidgets.QWidget):
         self.layout_buttons.addWidget(self.btn_encrypt,0,0)
         self.layout_buttons.addWidget(self.btn_decrypt,0,1)
 
-
-    def center(self):
-        """Center the main window in the screen based off the window size
-        """
-        qr = self.frameGeometry()
-        cp = QtWidgets.QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
-
     def change_pwd(self):
         """Changes Encryptor key, with a new Fernet key based on password
         """
+        if self.field_pwd.text() == "":
+            self.label_chg_pwd.setText("Password cannot be empty")
+            return None
         self.encryptor.set_key_from_password(self.field_pwd.text())
         self.label_chg_pwd.setText("Password typed")
         self.label_chg_pwd.setStyleSheet("color:#01ac2d")
@@ -208,7 +282,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
         QtWidgets.QMessageBox.information(self, "Password Change", 
             ("Your password has been successfully changed.\n\n"
              "You can now encrypt / decrypt files."))
-
 
     def create_key(self):
         """Create key file using Encryptor function
@@ -223,7 +296,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
             QtWidgets.QMessageBox.information(self, "Key File Generation", 
                     ("Your key file has been successfully generated.\n\n"
                      "You can load it to encrypt / decrypt."))
-
 
     def change_key(self):
         """Changes Encryptor key, with a new Fernet key from the file 
@@ -249,15 +321,13 @@ class Encryptor_GUI(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.critical(self, "File Loading Error", 
                 "An error has occured during file loading:\n\n{}".format(repr(e)))  
 
-   
     def previous_directory(self):
         """Is launched when the 'previous' button is clicked
         Change the current path to the previous directory
         """
         prev_dir = Path(self.path_viewer.text()).parent
         self.set_new_path(str(prev_dir))
-        
-
+    
     def change_directory(self):
         """Is launched when the 'change dir' button is clicked
         Change the current path to the one selected
@@ -269,7 +339,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
             self.tree.setRootIndex(self.model.index(folder))
             self.path_viewer.setText(folder)
     
-
     def select_change(self, selected, deselected):
         """Is fired every time a new item in the tree is selected
         Enable/Disable 'encrypt' and 'decrypt' buttons and change their colors
@@ -288,7 +357,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
             self.btn_encrypt.setEnabled(True)
             self.btn_decrypt.setEnabled(False)
 
-
     def open_file_directory(self):
         """Opens file or directory depending on current selection
         If the selection is a directory, it changes the working path
@@ -305,7 +373,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.critical(self, "File Error", 
                 "The system cannot open this file:\n\n{}".format(repr(e)))
 
-
     def set_new_path(self, path):
         """Changes the current path used, and set the field accordingly
         """
@@ -316,7 +383,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
             self.path_viewer.setText(path.as_posix())
         else:
             self.path_viewer.setText(str(path))
-
 
     def encrypt(self):
         """Uses the encryptor object to encrypt selected file or folder
@@ -334,7 +400,6 @@ class Encryptor_GUI(QtWidgets.QWidget):
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Encryption Error", 
             "An error has occured during the encryption:\n\n{}".format(repr(e)))
-
 
     def decrypt(self):
         """Uses the encryptor object to decrypt selected file
@@ -364,17 +429,15 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-
 # MAIN  
 if __name__ == '__main__':
     
     app = QtWidgets.QApplication(sys.argv)
     
     # theme
-    # set_ubuntu_theme(app)
+    app.setStyle("Fusion")
     set_dark_theme(app)
-    # set_light_theme(app)
-
+   
     # launch GUI
-    enc = Encryptor_GUI()
+    enc = EncryptorGUI()
     sys.exit(app.exec_())

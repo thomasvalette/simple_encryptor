@@ -2,9 +2,30 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtWidgets, QtGui, QtCore
 
+def set_light_theme(app):
+    light_palette = QtGui.QPalette()
+    light_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(240, 240, 240))
+    light_palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.black)
+    light_palette.setColor(QtGui.QPalette.Base, QtGui.QColor(255, 255, 255))
+    light_palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(220, 220, 220))
+    light_palette.setColor(QtGui.QPalette.ToolTipBase, QtCore.Qt.black)
+    light_palette.setColor(QtGui.QPalette.ToolTipText, QtCore.Qt.black)
+    light_palette.setColor(QtGui.QPalette.Text, QtCore.Qt.black)
+
+    light_palette.setColor(QtGui.QPalette.Button, QtGui.QColor(240, 240, 240))
+    light_palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.black)
+    light_palette.setColor(QtGui.QPalette.BrightText, QtCore.Qt.red)
+    light_palette.setColor(QtGui.QPalette.Link, QtGui.QColor(230, 230, 230))
+    light_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(70, 160, 240))
+    light_palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.white)
+    light_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, QtCore.Qt.darkGray)
+    light_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtCore.Qt.darkGray)
+    light_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtCore.Qt.darkGray)
+
+    app.setPalette(light_palette)
+    app.setStyleSheet("QToolTip { color: #000000; background-color: #f0f0f0; border: 1px solid black; } QPushButton { padding: 5px; }")
 
 def set_dark_theme(app):
-    app.setStyle("Fusion")
     dark_palette = QtGui.QPalette()
     dark_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(53, 53, 53))
     dark_palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
@@ -26,14 +47,7 @@ def set_dark_theme(app):
     app.setPalette(dark_palette)
     app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; } QPushButton { padding: 5px; }")
 
-
-def set_light_theme(app):
-    app.setStyle("Fusion")
-
-
 def set_ubuntu_theme(app):
-    app.setStyle("Fusion")
-    
     ubuntu_palette = QtGui.QPalette()
     ubuntu_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(50, 0,50))
     ubuntu_palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
@@ -46,11 +60,33 @@ def set_ubuntu_theme(app):
     ubuntu_palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.white)
     ubuntu_palette.setColor(QtGui.QPalette.BrightText, QtCore.Qt.red)
     ubuntu_palette.setColor(QtGui.QPalette.Link, QtGui.QColor(230, 230, 230))
-    ubuntu_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(150, 150, 150))
+    ubuntu_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(150, 100, 150))
     ubuntu_palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
     ubuntu_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, QtCore.Qt.darkGray)
     ubuntu_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtCore.Qt.darkGray)
     ubuntu_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtCore.Qt.darkGray)
 
     app.setPalette(ubuntu_palette)
+    app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; } QPushButton { padding: 5px; }")
+
+def set_solaris_theme(app):
+    solaris_palette = QtGui.QPalette()
+    solaris_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(0, 43,54))
+    solaris_palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
+    solaris_palette.setColor(QtGui.QPalette.Base, QtGui.QColor(0, 20, 30))
+    solaris_palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(40, 0, 40))
+    solaris_palette.setColor(QtGui.QPalette.ToolTipBase, QtCore.Qt.white)
+    solaris_palette.setColor(QtGui.QPalette.ToolTipText, QtCore.Qt.white)
+    solaris_palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
+    solaris_palette.setColor(QtGui.QPalette.Button, QtGui.QColor(0, 53, 65))
+    solaris_palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.white)
+    solaris_palette.setColor(QtGui.QPalette.BrightText, QtCore.Qt.red)
+    solaris_palette.setColor(QtGui.QPalette.Link, QtGui.QColor(230, 230, 230))
+    solaris_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(67, 114, 126))
+    solaris_palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
+    solaris_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, QtCore.Qt.darkGray)
+    solaris_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtCore.Qt.darkGray)
+    solaris_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtCore.Qt.darkGray)
+
+    app.setPalette(solaris_palette)
     app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; } QPushButton { padding: 5px; }")
